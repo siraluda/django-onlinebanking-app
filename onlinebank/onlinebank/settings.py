@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users.apps.UsersConfig',
+    'users',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -124,8 +125,8 @@ STATIC_URL = '/static/'
 AUTH_USER_MODEL = 'users.User'
 
 # LOGIN URLS
-LOGIN_REDIRECT_URL='users:home'
-LOGIN_URL='user:login'
+LOGIN_REDIRECT_URL = 'users:home'
+LOGIN_URL = 'users:login'
 
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
