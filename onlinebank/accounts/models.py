@@ -1,5 +1,5 @@
 from django.db import models
-from onlinebank.users.models import CustomerProfile
+from users.models import CustomerProfile
 
 
 ACCOUNT_TYPES = [
@@ -8,8 +8,8 @@ ACCOUNT_TYPES = [
 ]
 
 TRANSACTION_TYPE = [
-	('WITHDRAWAL', 'Withdrawal'),
-	('DEPOSIT', 'Deposit'),
+    ('WITHDRAWAL', 'Withdrawal'),
+    ('DEPOSIT', 'Deposit'),
 ]
 
 
@@ -20,17 +20,16 @@ class CustomerAccount(models.Model):
         max_digits=15, decimal_places=2, default=0.00)
 
     def __str__(self):
-        return self.customer
+        return str(self.customer) + " " + str(self.account_type) 
 
 
 class Transaction(models.Model):
- 	customer = models.ForeignKey(CustomerProfile, on_delete=models.CASCADE)
- 	account = models.ForeignKey(CustomerAccount, on_delete=models.CASCADE) 
- 	transaction_type = models.CharField(max_length=50, choices=TRANSACTION_TYPE)
- 	amount = models.DecimalField(max_digits=15, decimal_places=2)
- 	transaction_date = models.DateTimeField(auto_now_add=True)
+    customer = models.ForeignKey(CustomerProfile, on_delete=models.CASCADE)
+    account = models.ForeignKey(CustomerAccount, on_delete=models.CASCADE)
+    transaction_type = models.CharField(
+        max_length=50, choices=TRANSACTION_TYPE)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    transaction_date = models.DateTimeField(auto_now_add=True)
 
- 	def __str__(self):
- 		return f'{self.customer} {self.transaction_type}'
-
- 		
+    def __str__(self):
+        return str(self.customer) 

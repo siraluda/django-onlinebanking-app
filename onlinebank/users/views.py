@@ -10,7 +10,7 @@ def signUp(request):
             form.save()
             return redirect(reverse('users:home'))
 
-        return render(reverse('users:signup'))
+        return render(request, 'users/signup.html', {'form': form})
 
     form = UserSignUp()
     return render(request, 'users/signup.html', {'form': form})

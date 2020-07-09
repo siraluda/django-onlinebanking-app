@@ -54,13 +54,13 @@ class User(AbstractUser):
 
 class CustomerProfile(models.Model):
 
-    customer = models.ForeignKey(
+    customer = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    phone_number = models.CharField(max_length=20, unique=True)
-    date_of_birth = models.DateField()
-    address = models.CharField(max_length=200)
-    city = models.CharField(max_length=200)
-    postalcode = models.CharField(max_length=20)
+    phone_number = models.CharField(max_length=20, default='Add contact number')
+    date_of_birth = models.DateField(default='1990-01-01')
+    address = models.CharField(max_length=200, default='Enter Address')
+    city = models.CharField(max_length=200, default='Add city')
+    postalcode = models.CharField(max_length=20, default='Add postal code')
 
     def __str__(self):
-        return f'{self.customer.first_name} {self.customer.last_name}'
+        return self.customer.first_name
