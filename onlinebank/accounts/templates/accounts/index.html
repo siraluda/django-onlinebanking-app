@@ -15,16 +15,16 @@
     </head>
     <body class="sb-nav-fixed">
         <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-            <a class="navbar-brand" href="index.html">Start Bootstrap</a>
+            <a class="navbar-brand" href="index.html">Bank of Siraluda</a>
             <button class="btn btn-link btn-sm order-1 order-lg-0" id="sidebarToggle" href="#"><i class="fas fa-bars"></i></button>
             <!-- Navbar Search-->
             <form class="d-none d-md-inline-block form-inline ml-auto mr-0 mr-md-3 my-2 my-md-0">
-                <div class="input-group">
+                <!-- <div class="input-group">
                     <input class="form-control" type="text" placeholder="Search for..." aria-label="Search" aria-describedby="basic-addon2" />
                     <div class="input-group-append">
                         <button class="btn btn-primary" type="button"><i class="fas fa-search"></i></button>
                     </div>
-                </div>
+                </div> -->
             </form>
             <!-- Navbar-->
             <ul class="navbar-nav ml-auto ml-md-0">
@@ -105,28 +105,28 @@
                     </div>
                     <div class="sb-sidenav-footer">
                         <div class="small">Logged in as:</div>
-                        Start Bootstrap
+                        {{customer_info.customer}}
                     </div>
                 </nav>
             </div>
             <div id="layoutSidenav_content">
                 <main>
                     <div class="container-fluid">
-                        <h1 class="mt-4">Welcome! {{object.customer}}</h1>
+                        <h1 class="mt-4">Welcome! {{customer_info.customer.first_name}}</h1>
                         <ol class="breadcrumb mb-4">
                             <li class="breadcrumb-item active">Dashboard</li>
                         </ol>
                         <div class="row">
                             <div class="col-xl-3 col-md-6">
                                 <div class="card bg-primary text-white mb-4">
-                                    <div class="card-body">Primary Card</div>
+                                    <div class="card-body">${{total_balance}}</div>
                                     <div class="card-footer d-flex align-items-center justify-content-between">
-                                        <a class="small text-white stretched-link" href="#">View Details</a>
-                                        <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                                        <span class="small text-white stretched-link">Total Balance</span>
+                                        <!-- <div class="small text-white"><i class="fas fa-angle-right"></i></div> -->
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xl-3 col-md-6">
+                            <!-- <div class="col-xl-3 col-md-6">
                                 <div class="card bg-warning text-white mb-4">
                                     <div class="card-body">Warning Card</div>
                                     <div class="card-footer d-flex align-items-center justify-content-between">
@@ -134,17 +134,16 @@
                                         <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
                             <div class="col-xl-3 col-md-6">
                                 <div class="card bg-success text-white mb-4">
                                     <div class="card-body">Success Card</div>
                                     <div class="card-footer d-flex align-items-center justify-content-between">
-                                        <a class="small text-white stretched-link" href="#">View Details</a>
-                                        <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                                        <span class="small text-white stretched-link">View Details</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xl-3 col-md-6">
+                            <!-- <div class="col-xl-3 col-md-6">
                                 <div class="card bg-danger text-white mb-4">
                                     <div class="card-body">Danger Card</div>
                                     <div class="card-footer d-flex align-items-center justify-content-between">
@@ -152,19 +151,29 @@
                                         <div class="small text-white"><i class="fas fa-angle-right"></i></div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
                         <div class="row">
                             <div class="col-xl-6">
-                                <div class="card mb-4">
+                                <div class="card mb-4 h-200">
                                     <div class="card-header">
                                         <i class="fas fa-chart-area mr-1"></i>
-                                        Area Chart Example
+                                        My Accounts
                                     </div>
-                                    <div class="card-body"><canvas id="myAreaChart" width="100%" height="40"></canvas></div>
+                                    <div class="card-body">
+                                        {% for account in customer_accounts %}
+                                        <blockquote class="blockquote">
+                                            <p class="mb-0">{{account.account_type}} Account</p>
+                                            <footer class="blockquote-footer">Balance <cite title="Source Title">${{account.balance}}</cite></footer>
+                                          </blockquote>
+                                          <hr>
+                                          {% endfor %}
+                                          <a type="button" class="btn btn-primary btn-sm" href="">Transfer</a>
+                                          <a type="button" class="btn btn-outline-info btn-sm" href="">Add account</a>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-xl-6">
+                            <!-- <div class="col-xl-6">
                                 <div class="card mb-4">
                                     <div class="card-header">
                                         <i class="fas fa-chart-bar mr-1"></i>
@@ -172,7 +181,7 @@
                                     </div>
                                     <div class="card-body"><canvas id="myBarChart" width="100%" height="40"></canvas></div>
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
                         <div class="card mb-4">
                             <div class="card-header">
@@ -184,34 +193,24 @@
                                     <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                         <thead>
                                             <tr>
-                                                <th>Name</th>
-                                                <th>Position</th>
-                                                <th>Office</th>
-                                                <th>Age</th>
-                                                <th>Start date</th>
-                                                <th>Salary</th>
+                                                <!-- <th>Name</th> -->
+                                                <th>Account</th>
+                                                <th>Transaction</th>
+                                                <th>Amount</th>
+                                                <th>Date</th>
+                                                <!-- <th>Salary</th> -->
                                             </tr>
                                         </thead>
-                                        <tfoot>
-                                            <tr>
-                                                <th>Name</th>
-                                                <th>Position</th>
-                                                <th>Office</th>
-                                                <th>Age</th>
-                                                <th>Start date</th>
-                                                <th>Salary</th>
-                                            </tr>
-                                        </tfoot>
                                         <tbody>
+                                            {% for transaction in customer_transactions %}
                                             <tr>
-                                                <td>Tiger Nixon</td>
-                                                <td>System Architect</td>
-                                                <td>Edinburgh</td>
-                                                <td>61</td>
-                                                <td>2011/04/25</td>
-                                                <td>$320,800</td>
+                                                <td>{{transaction.account.account_type}}</td>
+                                                <td>{{transaction.transaction_type}}</td>
+                                                <td>${{transaction.amount}}</td>
+                                                <td>{{transaction.transaction_date}}</td>
                                             </tr>
-                                            <tr>
+                                            {% endfor %}
+                                            <!-- <tr>
                                                 <td>Garrett Winters</td>
                                                 <td>Accountant</td>
                                                 <td>Tokyo</td>
@@ -658,7 +657,7 @@
                                                 <td>27</td>
                                                 <td>2011/01/25</td>
                                                 <td>$112,000</td>
-                                            </tr>
+                                            </tr> -->
                                         </tbody>
                                     </table>
                                 </div>
