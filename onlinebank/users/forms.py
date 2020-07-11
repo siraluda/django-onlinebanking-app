@@ -15,3 +15,6 @@ class CustomerProfileForm(forms.ModelForm):
         model = CustomerProfile
         fields = ['phone_number', 'date_of_birth', 'address','city', 'postalcode',]
 
+class CustomLoginForm(forms.Form):
+    email = forms.EmailField(label='Email',max_length=200)
+    password = forms.CharField(label='Password',max_length=200,widget=forms.PasswordInput)

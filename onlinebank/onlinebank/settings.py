@@ -130,8 +130,8 @@ STATIC_URL = '/static/'
 AUTH_USER_MODEL = 'users.User'
 
 # LOGIN URLS
-LOGIN_REDIRECT_URL = 'users:home'
-LOGIN_URL = 'users:login'
+# LOGIN_REDIRECT_URL = 'users:home'
+# LOGIN_URL = 'users:login'
 
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
