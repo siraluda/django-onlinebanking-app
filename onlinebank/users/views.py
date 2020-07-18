@@ -54,23 +54,24 @@ class CustomLoginView(View):
 
         return render(request, 'users/login.html', {'form': form})
 
-def logout_view(request):
-    logout(request)
-    return redirect(reverse('users:login'))
+class SignupView(View):
 
-def signUp(request):
-    if request.method == "POST":
+    def get(self, request):
+        form = UserSignUp()
+        return render(request, 'users/signup.html', {'form': form})
+
+    def post(self, request):
         form = UserSignUp(request.POST)
 
         if form.is_valid():
             form.save()
-            return redirect(reverse('users:home'))
-
+            return redirect(reverse('users:login'))
         return render(request, 'users/signup.html', {'form': form})
 
-    form = UserSignUp()
-    return render(request, 'users/signup.html', {'form': form})
 
+def logout_view(request):
+    logout(request)
+    return redirect(reverse('users:login'))
 
 def index(request):
     return render(request, 'users/index.html')

@@ -1,14 +1,20 @@
 from django import forms
 from .models import CustomerAccount, Transaction
 
-class CreateAccountForm(forms.ModelForm):
-    
-    class Meta:
-        model = CustomerAccount
-        fields = ['account_type', 'balance']
+ACCOUNT_TYPES = [
+    ('SAVINGS', 'Savings'),
+    ('CHECKING', 'Checking'),
+]
 
-class CreateTransactionForm(forms.ModelForm):
+TRANSACTION_TYPES = [
+    ('WITHDRAWAL','Withdrawal'),
+    ('DEPOSIT','Deposit'),
+]
 
-    class Meta:
-        model = Transaction
-        fields = ['account', 'transaction_type', 'amount']
+class CreateAccountForm(forms.Form):
+    account_type = forms.ChoiceField(choices=ACCOUNT_TYPES)
+
+class CreateTransactionForm(forms.Form):
+    account_type = forms.ChoiceField(choices=ACCOUNT_TYPES)
+    transaction_type = forms.ChoiceField(choices=TRANSACTION_TYPES)
+    amount = forms.DecimalField(max_digits=10, decimal_places=2)

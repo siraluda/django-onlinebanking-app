@@ -1,48 +1,134 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, reverse, get_object_or_404
+from django.http import JsonResponse
 from .models import CustomerAccount, Transaction
 from users.models import CustomerProfile
 from django.views.generic import DetailView, View
 from .forms import CreateAccountForm, CreateTransactionForm
+from django.db.models import Sum
 
 
-class CustomerAccountView(DetailView):
-    model = CustomerProfile
+def customerDashboardView(request, pk):
+
     template_name = 'accounts/index.html'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    # forms
+    forms = {
+        "transaction": CreateTransactionForm(),
+        "create_account": CreateAccountForm()
+    }
 
-        customer_info = CustomerProfile.objects.get(id=self.kwargs['pk'])
-        customer_accounts = CustomerAccount.objects.filter(
-            customer__customer__id=self.kwargs['pk'])
-        customer_transactions = Transaction.objects.filter(
-            customer__customer__id=self.kwargs['pk']).order_by('-transaction_date')
+    # get the current logged in customer's profile, accounts and transaction details 
+    customer_profile = CustomerProfile.objects.get(id=pk)
+    customer_accounts = CustomerAccount.objects.filter(
+            customer__customer__id=pk)
+    customer_transactions = Transaction.objects.filter(
+            customer__customer__id=pk).order_by('-transaction_date')
+
+    # customer's total balance
+    total_balance = _customer_total_balance(pk)
+    if total_balance is None:
         total_balance = 0
 
-        # add balances from each account
-        for account_balance in customer_accounts:
-            total_balance += account_balance.balance
+    context = {
+        "customer_profile": customer_profile,
+        "customer_accounts": customer_accounts,
+        "customer_transactions": customer_transactions,
+        "forms": forms,
+        "total_balance": total_balance,
+    }
 
-        context = {
-            'customer_accounts': customer_accounts,
-            'customer_info': customer_info,
-            'total_balance': total_balance,
-            'customer_transactions': customer_transactions
-        }
+    return render(request, template_name, context)
 
-        return context
+def performTransaction(request):
+    
+    if request.is_ajax and request.method == 'POST':
+        t_form = CreateTransactionForm(request.POST)
 
-class MakeTransaction(View):
+        if t_form.is_valid():
 
-    def get(self, request):
-        create_transaction = CreateTransactionForm(instance=request.user)
+            account_type = t_form.cleaned_data['account_type']
+            transaction_type = t_form.cleaned_data['transaction_type']
+            amount = t_form.cleaned_data['amount']
 
-        return render(request, 'accounts/transaction_form.html', {'t_form': create_transaction})
+            customer_id = request.user.id
 
-    def post(self, request):
-        t_form = CreateTransactionForm(request.POST, instance=request.user)
+            try:
+                # update customer account
+                _update_customer_balance(customer_id, account_type, transaction_type, amount)
+            
+            except Exception:
+                return JsonResponse({'error': 'Sorry, you have insufficent balance'}, status=200)
+            
+            else:
+                # customer object
+                customer = get_object_or_404(CustomerProfile, id=customer_id)
 
-        def form_valid(self, t_form):
-            t_form.instance.customer = self.request.user
-            return super().form_valid(t_form)
-        
+                # use account_type to find customer's account object
+                customer_account_type = get_object_or_404(CustomerAccount, customer=customer, account_type=account_type)
+
+                # create new transaction object in database
+                new_transaction = Transaction(customer=customer, account=customer_account_type, transaction_type=transaction_type, amount=amount)
+                new_transaction.save()
+
+                # customer balance
+                total_balance = _customer_total_balance(customer_id)
+
+                data = {
+                    'amount': amount,
+                    'transaction_type': transaction_type,
+                    'account_type':account_type,
+                    'total_balance': total_balance,
+                }
+
+                return JsonResponse({'data': data}, status=200)      
+        else:
+            return JsonResponse({'errors':t_form.errors}, status=400)
+    else:
+        return JsonResponse({'errors':"Invalid form submission method"}, status=400)
+
+def createAccount(request):
+    if request.method == 'POST':
+        create_account_form = CreateAccountForm(request.POST)
+
+        if create_account_form.is_valid():
+            account_type = create_account_form.cleaned_data['account_type']
+            
+            if not _check_customer_account_exist(request.user.id, account_type):
+                new_account = CustomerAccount(customer=request.user.customerprofile, account_type=account_type)
+                new_account.save()
+                return redirect(reverse('accounts:customer-account-page', args=(request.user.id,)))
+ 
+            return redirect(reverse('accounts:customer-account-page', args=(request.user.id,)))
+
+
+def _update_customer_balance(id, account_type, transaction_type, amount):
+    """ This function updates a customer's account if a deposit or a withdrawal is made"""
+    current_account_balance = CustomerAccount.objects.get(customer__customer__id=id, account_type=account_type).balance
+
+    if transaction_type == "DEPOSIT":
+        new_balance = current_account_balance + amount 
+        return CustomerAccount.objects.filter(customer__customer__id=id, account_type=account_type).update(balance=new_balance)
+
+    if transaction_type == "WITHDRAWAL" and current_account_balance > 0:
+        new_balance = current_account_balance - amount
+        if new_balance > 0: 
+            return CustomerAccount.objects.filter(customer__customer__id=id, account_type=account_type).update(balance=new_balance)
+        else:
+            raise Exception
+    else:
+        raise Exception
+
+
+def _customer_total_balance(id):
+    ''' Sum up the balances in customer's accounts '''
+    return CustomerAccount.objects.filter(customer__customer__id=id).aggregate(Sum('balance')).get('balance__sum')
+
+def _check_customer_account_exist(id, account_type):
+    '''Check if the customer already has a Checking or Savings account '''
+    try:
+        c_account = CustomerAccount.objects.get(customer__customer__id=id, account_type=account_type)
+    except Exception:
+        return False
+    else:
+        return True
+

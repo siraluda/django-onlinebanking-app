@@ -1,8 +1,10 @@
 from django.urls import path
-from .views import CustomerAccountView
+from .views import customerDashboardView, performTransaction, createAccount
 
 app_name = "accounts"
 
 urlpatterns = [
-    path('customer-account/<int:pk>', CustomerAccountView.as_view(), name='customer-account-page'),
+    path('customer-account/<int:pk>', customerDashboardView, name='customer-account-page'),
+    path('transaction', performTransaction, name='perform_transaction'),
+    path('create-account', createAccount, name='create_account'),
 ]
