@@ -5,6 +5,7 @@ from users.models import CustomerProfile
 from django.views.generic import DetailView, View
 from .forms import CreateAccountForm, CreateTransactionForm
 from django.db.models import Sum
+from django.core import serializers
 
 
 def customerDashboardView(request, pk):
@@ -17,12 +18,12 @@ def customerDashboardView(request, pk):
         "create_account": CreateAccountForm()
     }
 
-    # get the current logged in customer's profile, accounts and transaction details 
+    # get the current logged in customer's profile, accounts and transaction details
     customer_profile = CustomerProfile.objects.get(id=pk)
     customer_accounts = CustomerAccount.objects.filter(
-            customer__customer__id=pk)
+        customer__customer__id=pk)
     customer_transactions = Transaction.objects.filter(
-            customer__customer__id=pk).order_by('-transaction_date')
+        customer__customer__id=pk).order_by('-transaction_date')
 
     # customer's total balance
     total_balance = _customer_total_balance(pk)
@@ -39,8 +40,9 @@ def customerDashboardView(request, pk):
 
     return render(request, template_name, context)
 
+
 def performTransaction(request):
-    
+
     if request.is_ajax and request.method == 'POST':
         t_form = CreateTransactionForm(request.POST)
 
@@ -52,66 +54,82 @@ def performTransaction(request):
 
             customer_id = request.user.id
 
-            try:
-                # update customer account
-                _update_customer_balance(customer_id, account_type, transaction_type, amount)
-            
-            except Exception:
-                return JsonResponse({'error': 'Sorry, you have insufficent balance'}, status=200)
+            # check if customer account exist
+            if not _check_customer_account_exist(id=customer_id, account_type=account_type):
+                return JsonResponse({'error': f'Sorry, you don\'t have a {account_type} account'}, status=200)
             
             else:
-                # customer object
-                customer = get_object_or_404(CustomerProfile, id=customer_id)
+                try:
+                    # update customer account
+                    _update_customer_balance(
+                        customer_id, account_type, transaction_type, amount)
 
-                # use account_type to find customer's account object
-                customer_account_type = get_object_or_404(CustomerAccount, customer=customer, account_type=account_type)
+                except Exception:
+                    return JsonResponse({'error': 'Sorry, you have insufficent balance'}, status=200)
 
-                # create new transaction object in database
-                new_transaction = Transaction(customer=customer, account=customer_account_type, transaction_type=transaction_type, amount=amount)
-                new_transaction.save()
+                else:
+                    # customer object
+                    customer = get_object_or_404(CustomerProfile, id=customer_id)
 
-                # customer balance
-                total_balance = _customer_total_balance(customer_id)
+                    # use account_type to find customer's account object
+                    customer_account_type = get_object_or_404(
+                        CustomerAccount, customer=customer, account_type=account_type)
 
-                data = {
-                    'amount': amount,
-                    'transaction_type': transaction_type,
-                    'account_type':account_type,
-                    'total_balance': total_balance,
-                }
+                    # create new transaction object in database
+                    new_transaction = Transaction(
+                        customer=customer, account=customer_account_type, transaction_type=transaction_type, amount=amount)
+                    new_transaction.save()
 
-                return JsonResponse({'data': data}, status=200)      
+                    # customer balance
+                    total_balance = _customer_total_balance(customer_id)
+
+                    # Get updated balance in customer's account
+                    customer_accounts = serializers.serialize("json", CustomerAccount.objects.filter(customer__customer__id=customer_id))
+                    
+                    data = {
+                        'amount': amount,
+                        'transaction_type': transaction_type,
+                        'account_type': account_type,
+                        'total_balance': total_balance,
+                        'customer_accounts': customer_accounts
+                    }
+
+                    return JsonResponse({'data': data}, status=200)
         else:
-            return JsonResponse({'errors':t_form.errors}, status=400)
+            return JsonResponse({'error': t_form.errors}, status=400)
     else:
-        return JsonResponse({'errors':"Invalid form submission method"}, status=400)
+        return JsonResponse({'error': "Invalid form submission method"}, status=400)
+
 
 def createAccount(request):
-    if request.method == 'POST':
+    if request.is_ajax and request.method == 'POST':
         create_account_form = CreateAccountForm(request.POST)
 
         if create_account_form.is_valid():
             account_type = create_account_form.cleaned_data['account_type']
-            
+
+            # check if the type of account the customer is trying to create already exists
             if not _check_customer_account_exist(request.user.id, account_type):
-                new_account = CustomerAccount(customer=request.user.customerprofile, account_type=account_type)
+                new_account = CustomerAccount(
+                    customer=request.user.customerprofile, account_type=account_type)
                 new_account.save()
-                return redirect(reverse('accounts:customer-account-page', args=(request.user.id,)))
- 
-            return redirect(reverse('accounts:customer-account-page', args=(request.user.id,)))
+                return JsonResponse({"success":f"{account_type} account created!"})
+
+            return JsonResponse({"error": f"Sorry, You already have a {account_type} account"})
 
 
 def _update_customer_balance(id, account_type, transaction_type, amount):
     """ This function updates a customer's account if a deposit or a withdrawal is made"""
-    current_account_balance = CustomerAccount.objects.get(customer__customer__id=id, account_type=account_type).balance
+    current_account_balance = CustomerAccount.objects.get(
+        customer__customer__id=id, account_type=account_type).balance
 
     if transaction_type == "DEPOSIT":
-        new_balance = current_account_balance + amount 
+        new_balance = current_account_balance + amount
         return CustomerAccount.objects.filter(customer__customer__id=id, account_type=account_type).update(balance=new_balance)
 
     if transaction_type == "WITHDRAWAL" and current_account_balance > 0:
         new_balance = current_account_balance - amount
-        if new_balance > 0: 
+        if new_balance > 0:
             return CustomerAccount.objects.filter(customer__customer__id=id, account_type=account_type).update(balance=new_balance)
         else:
             raise Exception
@@ -120,15 +138,16 @@ def _update_customer_balance(id, account_type, transaction_type, amount):
 
 
 def _customer_total_balance(id):
-    ''' Sum up the balances in customer's accounts '''
+    ''' Sum up the balances in customer's accounts types'''
     return CustomerAccount.objects.filter(customer__customer__id=id).aggregate(Sum('balance')).get('balance__sum')
+
 
 def _check_customer_account_exist(id, account_type):
     '''Check if the customer already has a Checking or Savings account '''
     try:
-        c_account = CustomerAccount.objects.get(customer__customer__id=id, account_type=account_type)
+        c_account = CustomerAccount.objects.get(
+            customer__customer__id=id, account_type=account_type)
     except Exception:
         return False
     else:
         return True
-

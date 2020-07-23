@@ -228,29 +228,26 @@
             <div class="row">
               <div class="col-xl-3 col-md-6">
                 <div class="card bg-primary text-white mb-4">
-                  <div class="card-body">${{total_balance | floatformat:"2"|intcomma}}</div>
+                  <div class="card-body">
+                    <div id="totalBalance">
+                      ${{total_balance | floatformat:"2"|intcomma}}    
+                    </div>
+                </div>
                   <div
                     class="card-footer d-flex align-items-center justify-content-between"
                   >
                     <span class="small text-white stretched-link"
                       >Total Balance</span
                     >
-                    <!-- <div class="small text-white"><i class="fas fa-angle-right"></i></div> -->
                   </div>
                 </div>
               </div>
+              <div id="dashboardAlerts" class="col-xl-3 col-md-6">
+              </div>
               <!-- <div class="col-xl-3 col-md-6">
-                                <div class="card bg-warning text-white mb-4">
-                                    <div class="card-body">Warning Card</div>
-                                    <div class="card-footer d-flex align-items-center justify-content-between">
-                                        <a class="small text-white stretched-link" href="#">View Details</a>
-                                        <div class="small text-white"><i class="fas fa-angle-right"></i></div>
-                                    </div>
-                                </div>
-                            </div> -->
-              <div class="col-xl-3 col-md-6">
                 <div class="card bg-success text-white mb-4">
-                  <div class="card-body">Success Card</div>
+                  <div class="card-body">Recent activity:</div>
+                  <span id="accountActivity"></span>
                   <div
                     class="card-footer d-flex align-items-center justify-content-between"
                   >
@@ -259,7 +256,7 @@
                     >
                   </div>
                 </div>
-              </div>
+              </div> -->
               <!-- <div class="col-xl-3 col-md-6">
                                 <div class="card bg-danger text-white mb-4">
                                     <div class="card-body">Danger Card</div>
@@ -278,17 +275,19 @@
                     My Accounts
                   </div>
                   <div class="card-body">
-                    
-                    {% for account in customer_accounts %}
-                    <blockquote class="blockquote">
-                      <p class="mb-0">{{account.account_type}} Account</p>
-                      <footer class="blockquote-footer">
-                        Balance
-                        <cite title="Source Title">${{account.balance|intcomma}}</cite>
-                      </footer>
-                    </blockquote>
-                    <hr />
-                    {% endfor %}
+                    <div id="customer_accounts">
+                      {% for account in customer_accounts %}
+                      <blockquote class="blockquote">
+                        <p class="mb-0">{{account.account_type}} Account</p>
+                        <footer class="blockquote-footer">
+                          Balance
+                          <cite title="Source Title">${{account.balance|intcomma}}</cite>
+                        </footer>
+                      </blockquote>
+                      <hr />
+                      {% endfor %}
+                    </div>
+                    <div id="accountButtons">
                     {% if customer_accounts|length > 0  %}
                     <a type="button" class="btn btn-primary btn-sm" href="" data-toggle="modal" data-target="#transactionModal"
                       >Make transaction</a  
@@ -299,6 +298,7 @@
                       >Add account</a
                     >
                     {% endif %}
+                  </div>
                   </div>
                 </div>
               </div>

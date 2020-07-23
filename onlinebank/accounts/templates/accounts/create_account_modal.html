@@ -3,7 +3,7 @@
 <div>
     <!-- The Modal -->
     <div class="modal fade" id="createAccountModal" role="dialog">
-        <form id="create-account-form" method="POST" action="{% url 'accounts:create_account' %}">
+        <form id="create-account-form">
             {% csrf_token %}
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
@@ -20,7 +20,7 @@
 
                     <!-- Modal footer -->
                     <div class="modal-footer">
-                        <input type="submit" id="create-account-form-button" class="btn btn-outline-success" value="Send"/>
+                        <input type="button" id="create-account-form-button" class="btn btn-outline-success" value="Add account"/>
                         <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
                     </div>
                 </div>

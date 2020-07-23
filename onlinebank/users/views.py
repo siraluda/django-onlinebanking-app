@@ -43,7 +43,9 @@ class CustomLoginView(View):
 
         if form.is_valid():
             email = form.cleaned_data.get('email')
-            password = form.cleaned_data.get('password')            
+            password = form.cleaned_data.get('password')  
+
+            # authenticate user          
             user = authenticate(email=email, password=password)
             user_id = user.id
 
