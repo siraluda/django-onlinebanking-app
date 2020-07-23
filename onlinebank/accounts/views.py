@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.http import JsonResponse
-from .models import CustomerAccount, Transaction
-from users.models import CustomerProfile
-from django.views.generic import DetailView, View
-from .forms import CreateAccountForm, CreateTransactionForm
 from django.db.models import Sum
 from django.core import serializers
+from django.views.generic import DetailView, View
+
+from .models import CustomerAccount, Transaction
+from users.models import CustomerProfile
+from .forms import CreateAccountForm, CreateTransactionForm, AccountsTransferForm
+
 
 
 def customerDashboardView(request, pk):
@@ -15,7 +17,8 @@ def customerDashboardView(request, pk):
     # forms
     forms = {
         "transaction": CreateTransactionForm(),
-        "create_account": CreateAccountForm()
+        "create_account": CreateAccountForm(),
+        "accounts_transfer": AccountsTransferForm(),
     }
 
     # get the current logged in customer's profile, accounts and transaction details
@@ -80,7 +83,7 @@ def performTransaction(request):
                         customer=customer, account=customer_account_type, transaction_type=transaction_type, amount=amount)
                     new_transaction.save()
 
-                    # customer balance
+                    # get customer's balance
                     total_balance = _customer_total_balance(customer_id)
 
                     # Get updated balance in customer's account
@@ -118,6 +121,32 @@ def createAccount(request):
             return JsonResponse({"error": f"Sorry, You already have a {account_type} account"})
 
 
+def accountsTransfer(request):
+    if request.is_ajax and request.method == 'POST':
+        accounts_transfer_form = AccountsTransferForm(request.POST)
+    
+    if accounts_transfer_form.is_valid():
+        from_ = accounts_transfer_form.cleaned_data['from_']
+        to = accounts_transfer_form.cleaned_data['to']
+        amount = accounts_transfer_form.cleaned_data['amount']
+
+        if from_ == to:
+            return JsonResponse({'error': 'You have selected the same accounts'}, status=200)
+        
+        else:
+            try:
+                _update_customer_balance(request.user.id, from_, 'WITHDRAWAL', amount)
+
+            except Exception:
+                return JsonResponse({'error': 'Sorry, you have insufficent balance'}, status=200)
+            
+            else:
+                _update_customer_balance(request.user.id, to, 'DEPOSIT', amount)
+                return JsonResponse({"success":f"${amount} transfered from {from_} to {to}!"})
+
+
+
+# UTILITY FUNCTIONS
 def _update_customer_balance(id, account_type, transaction_type, amount):
     """ This function updates a customer's account if a deposit or a withdrawal is made"""
     current_account_balance = CustomerAccount.objects.get(
@@ -129,7 +158,7 @@ def _update_customer_balance(id, account_type, transaction_type, amount):
 
     if transaction_type == "WITHDRAWAL" and current_account_balance > 0:
         new_balance = current_account_balance - amount
-        if new_balance > 0:
+        if new_balance >= 0:
             return CustomerAccount.objects.filter(customer__customer__id=id, account_type=account_type).update(balance=new_balance)
         else:
             raise Exception

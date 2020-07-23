@@ -2,6 +2,7 @@
 {% load crispy_forms_tags %}
 {% include 'accounts/transaction_modal.html' %}
 {% include 'accounts/create_account_modal.html' %}
+{% include 'accounts/accounts_transfer_modal.html' %}
 {% load humanize %}
 
 <!DOCTYPE html>
@@ -298,6 +299,11 @@
                       >Add account</a
                     >
                     {% endif %}
+                    {% if customer_accounts|length >= 2 %}
+                    <a type="button" class="btn btn-outline-info btn-sm" href="" data-toggle="modal" data-target="#accountsTransferModal"
+                      >Transfer between accounts</a
+                    >
+                    {% endif %}
                   </div>
                   </div>
                 </div>
@@ -388,6 +394,7 @@
       src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"
       crossorigin="anonymous"
     ></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script src="{% static 'accounts/assets/demo/datatables-demo.js' %}"></script>
     ></script>
     <script src="{% static 'accounts/js/transactionAjax.js' %}"></script>

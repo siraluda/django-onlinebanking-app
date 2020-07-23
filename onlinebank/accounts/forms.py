@@ -18,3 +18,9 @@ class CreateTransactionForm(forms.Form):
     account_type = forms.ChoiceField(choices=ACCOUNT_TYPES)
     transaction_type = forms.ChoiceField(choices=TRANSACTION_TYPES)
     amount = forms.DecimalField(max_digits=10, decimal_places=2)
+
+class AccountsTransferForm(forms.Form):
+    from_ = forms.ChoiceField(choices=ACCOUNT_TYPES)
+    to = forms.ChoiceField(choices=ACCOUNT_TYPES)
+    amount = forms.DecimalField(max_digits=10, decimal_places=2)
+
