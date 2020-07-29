@@ -28,7 +28,7 @@ class CustomerProfileUpdate(View):
         if u_form.is_valid() and c_form.is_valid():
             u_form.save()
             c_form.save()
-            return redirect(reverse('accounts:customer-account-page', args=(customer_id,)))
+            return redirect(reverse('users:login'))
 
 
 class CustomLoginView(View):
@@ -73,7 +73,7 @@ class SignupView(View):
 
 def logout_view(request):
     logout(request)
-    return redirect(reverse('users:login'))
+    return redirect(reverse('users:home'))
 
 def index(request):
-    return render(request, 'users/index.html')
+    return render(request, 'users/coverpage.html')

@@ -18,6 +18,10 @@ $(function() {
                 $("#totalBalance").load(" #totalBalance")
                 $("#customer_accounts").load(" #customer_accounts")
                 $("#dataTable").load(" #dataTable")
+                $("#transaction-totals").load(" #transaction-totals")
+                $("#transactionChartjs").load(" #transactionChartjs")
+                
+                // $("#myChart").load(" #myChart")
 
                 // Render messages
                 if (response.data){

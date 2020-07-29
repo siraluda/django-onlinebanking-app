@@ -12,7 +12,7 @@ from .forms import CreateAccountForm, CreateTransactionForm, AccountsTransferFor
 
 def customerDashboardView(request, pk):
 
-    template_name = 'accounts/index.html'
+    template_name = 'accounts/dashboard.html'
 
     # forms
     forms = {
@@ -28,17 +28,27 @@ def customerDashboardView(request, pk):
     customer_transactions = Transaction.objects.filter(
         customer__customer__id=pk).order_by('-transaction_date')
 
-    # customer's total balance
-    total_balance = _customer_total_balance(pk)
-    if total_balance is None:
-        total_balance = 0
+    # Customer's total withdrawals and deposits
+    customer_total_withdrawal = _customer_total_transactions(pk, "WITHDRAWAL") if _customer_total_transactions(pk, "WITHDRAWAL") else 0
+    customer_total_deposit = _customer_total_transactions(pk, "DEPOSIT") if _customer_total_transactions(pk, "DEPOSIT") else 0
 
+    trans_totals = {
+        "total_deposit": customer_total_deposit, 
+        "total_withdrawal": customer_total_withdrawal,
+    }
+
+    # customer's total balance
+    total_balance = _customer_total_balance(pk) if _customer_total_balance(pk) else 0
+
+    print(customer_total_withdrawal)
+    print(customer_total_deposit)
     context = {
         "customer_profile": customer_profile,
         "customer_accounts": customer_accounts,
         "customer_transactions": customer_transactions,
         "forms": forms,
         "total_balance": total_balance,
+        "totals": trans_totals
     }
 
     return render(request, template_name, context)
@@ -116,7 +126,7 @@ def createAccount(request):
                 new_account = CustomerAccount(
                     customer=request.user.customerprofile, account_type=account_type)
                 new_account.save()
-                return JsonResponse({"success":f"{account_type} account created!"})
+                return JsonResponse({"success":f"{account_type} account added!"})
 
             return JsonResponse({"error": f"Sorry, You already have a {account_type} account"})
 
@@ -180,3 +190,8 @@ def _check_customer_account_exist(id, account_type):
         return False
     else:
         return True
+
+def _customer_total_transactions(pk, transction_type):
+    'Return the total sum of customer withdrawals or deposits'
+    return Transaction.objects.filter(
+        customer__customer__id=pk, transaction_type=transction_type).aggregate(Sum('amount')).get('amount__sum')
