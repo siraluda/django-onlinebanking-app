@@ -3,7 +3,6 @@ from .forms import UserSignUp, CustomerProfileForm, CustomLoginForm
 from django.views.generic import View
 from django.contrib.auth import login, logout, authenticate
 
-
 class CustomerProfileUpdate(View):
 
     def get(self, request):
@@ -45,15 +44,19 @@ class CustomLoginView(View):
             email = form.cleaned_data.get('email')
             password = form.cleaned_data.get('password')  
 
-            # authenticate user          
-            user = authenticate(email=email, password=password)
-            user_id = user.id
+            try:
+                # authenticate user          
+                user = authenticate(email=email, password=password)
+                user_id = user.id
+            
+            except AttributeError:
+                return render(request, 'users/login.html', {'form': form, 'error_message': 'Invalid email or password'})
 
-            if user is not None:
+            else:
                 if user.is_active:
                     login(request, user)
                     return redirect(reverse('accounts:customer-account-page', args=(user_id,)))
-
+            
         return render(request, 'users/login.html', {'form': form})
 
 class SignupView(View):
