@@ -79,4 +79,4 @@ def logout_view(request):
     return redirect(reverse('users:home'))
 
 def index(request):
-    return render(request, 'users/coverpage.html')
+    return render(request, 'users/index.html')
