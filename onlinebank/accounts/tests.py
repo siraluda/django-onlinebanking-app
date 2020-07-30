@@ -1,28 +1,58 @@
-from django.test import TestCase
-from .models import CustomerAccount
-from onlinebank.users.models import User, CustomerProfile
+from django.test import TestCase, Client
+from .models import CustomerAccount, Transaction
+from users.models import CustomerProfile
+from django.contrib.auth import get_user_model
 
 class CustomerAccountTest(TestCase):
+    
+    def setUp(self):
 
-    def _create_user_obj(self):
-        email = 'test@email.com'
-        password = 'testing123'
-        return User.objects.create_user(email, password)
+        self.user = get_user_model().objects.create_user(
+            email = 'test@email.com', password = 'testing123')
 
-    def _create_customerProfile(self):
-        phone_number = '+1-234-467-8910'
-        date_of_birth = '01/13/1992'
-        address = '23 Wall St'
-        city = 'St. Johns'
-        postalcode = 'A1B2C3'
+        self.customer_profile = CustomerProfile(
 
-        user = self._create_user_obj()
+            customer= self.user,
+            phone_number = '+1-234-467-8910', 
+            date_of_birth = '01/13/1992',
+            address = '23 Wall St',
+            city = 'St. Johns',
+            postalcode = 'A1B2C3',        
+            )
 
-        return CustomerProfile(user, phone_number, date_of_birth, address, city, postalcode)
+        self.customer_savings_account = CustomerAccount(
+            customer = self.customer_profile, 
+            account_type = 'Savings', 
+            balance = 1000)
+        
+        self.customer_checking_account = CustomerAccount(
+            customer = self.customer_profile, 
+            account_type = 'Checking', 
+            balance = 1000)
 
-    def test_create_customer_account(self):
-        customer_profile = self._create_customerProfile()
-        customer_account = CustomerAccount(customer_profile, 'Savings')
+        self.customer_withdrawal_transaction = Transaction(
+            customer = self.customer_profile,
+            account = self.customer_savings_account,
+            transaction_type = "Withdrawal",
+            amount = 700,
+        )
 
-        self.assertTrue(isinstance(customer_account, CustomerAccount))
+        self.customer_deposit_transaction = Transaction(
+            customer = self.customer_profile,
+            account = self.customer_checking_account,
+            transaction_type = "Deposit",
+            amount = 500,
+        )
+
+
+    def test_create_customer_accounts(self):    
+        self.assertTrue(isinstance(self.customer_savings_account, CustomerAccount))
+        self.assertTrue(isinstance(self.customer_checking_account, CustomerAccount))
+
+    def test_customer_transaction(self):
+        self.assertTrue(isinstance(self.customer_withdrawal_transaction, Transaction))
+        self.assertTrue(isinstance(self.customer_deposit_transaction, Transaction))
+        
+
+
 

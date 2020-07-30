@@ -7,6 +7,7 @@ from django.views.generic import DetailView, View
 from .models import CustomerAccount, Transaction
 from users.models import CustomerProfile
 from .forms import CreateAccountForm, CreateTransactionForm, AccountsTransferForm
+
 from .utility_funcs import (
 _customer_total_transactions, 
 _customer_total_balance,
@@ -46,8 +47,6 @@ def customerDashboardView(request, pk):
     # customer's total balance
     total_balance = _customer_total_balance(pk) if _customer_total_balance(pk) else 0
 
-    print(customer_total_withdrawal)
-    print(customer_total_deposit)
     context = {
         "customer_profile": customer_profile,
         "customer_accounts": customer_accounts,

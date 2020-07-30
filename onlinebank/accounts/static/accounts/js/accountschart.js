@@ -1,7 +1,6 @@
 
 let myChart = document.getElementById("transactionsChart").getContext('2d');
 const transactionData = JSON.parse(document.getElementById("transaction-totals").textContent);
-console.log(transactionData);
 
 let tCHart = new Chart(myChart, {
     type: 'pie',
